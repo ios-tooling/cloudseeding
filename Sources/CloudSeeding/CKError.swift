@@ -19,6 +19,11 @@ public extension CKError {
 		isNotAuthenticated || isTemporarilyUnavailable
 	}
 	
+	var retryAfter: TimeInterval? {
+		guard let number = userInfo[CKErrorRetryAfterKey] as? NSNumber else { return nil }
+		return number.doubleValue
+	}
+	
 	func hasErrorCode(_ code: CKError.Code) -> Bool {
 		if self.code == code { return true }
 		
