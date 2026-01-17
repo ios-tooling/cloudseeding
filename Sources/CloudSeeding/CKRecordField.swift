@@ -77,8 +77,8 @@ extension CKAsset {
 	
 	func localAssetURL(for type: UTType) -> URL? {
 		guard let fileURL else { return nil }
-		let partial = fileURL.lastPathComponent
-		let full = Self.ckRecordAttachmentsDirectory.appendingPathComponent(partial, conformingTo: type)
+		let filename = (try? fileURL.md5) ?? fileURL.lastPathComponent
+		let full = Self.ckRecordAttachmentsDirectory.appendingPathComponent(filename, conformingTo: type)
 		try? FileManager.default.createDirectory(at: Self.ckRecordAttachmentsDirectory, withIntermediateDirectories: true)
 
 		if !FileManager.default.fileExists(at: full), FileManager.default.fileExists(at: fileURL) {
