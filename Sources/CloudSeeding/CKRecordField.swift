@@ -100,11 +100,7 @@ extension CKRecord {
 				return
 			}
 			
-			if url.isFileURL {
-				self[field.name] = CKAsset(fileURL: url.addingHomeDirectory)
-			} else {
-				self[field.name] = url as? CKRecordValue
-			}
+			self[field.name] = CKAsset(fileURL: url.addingHomeDirectory)
 		}
 	}
 	
