@@ -32,6 +32,7 @@ public extension PersistedCKRecord {
 		} else {
 			self.modifiedAt = record.modificationDate ?? .now
 		}
+		lastKnownRecord = record
 		if !load(fromCloud: record, context: context) { return nil }
 	}
 
