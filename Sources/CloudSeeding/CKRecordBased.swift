@@ -53,9 +53,7 @@ extension CKRecordBased {
 	
 	public var lastKnownRecord: CKRecord? {
 		get {
-			guard let record = rawLastKnownRecord else { return nil }
-			updateCloudRecord(record)
-			return record
+			rawLastKnownRecord
 		}
 		
 		set {
@@ -67,7 +65,6 @@ extension CKRecordBased {
 			} else {
 				self.cachedRecordData = nil
 			}
-			assert(cachedRecordData != nil, "Should never set cachedRecordData to nil.")
 		}
 	}
 }

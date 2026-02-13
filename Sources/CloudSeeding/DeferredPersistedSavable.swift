@@ -15,23 +15,21 @@ public protocol DeferredPersistedSavable: PersistentModel {
 }
 
 public extension DeferredPersistedSavable {
-	func save(record: CKRecord, to database: CKDatabase) {
+	func save(record: CKRecord, to database: CKDatabase) async {
 		let id = persistentModelID
 		guard let container = modelContext?.container else {
 			print("Trying to save a non-inserted record, failing.")
 			return
 		}
-		Task {
-			do {
-				try await CloudComms.instance.save(record: record, to: database)
-			} catch {
-				let ctx = ModelContext(container)
-				guard let model = ctx.model(for: id) as? any DeferredPersistedSavable else {
-					print("Trying to save a mismatched object.")
-					return
-				}
-				model.pendingCloudRecord = record
+		do {
+			try await CloudComms.instance.save(record: record, to: database)
+		} catch {
+			let ctx = ModelContext(container)
+			guard let model = ctx.model(for: id) as? any DeferredPersistedSavable else {
+				print("Trying to save a mismatched object.")
+				return
 			}
+			model.pendingCloudRecord = record
 		}
 	}
 	

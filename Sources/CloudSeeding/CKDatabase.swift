@@ -65,34 +65,29 @@ public extension CKDatabase {
 		if await Reachability.instance.isOffline { throw CloudSeedingError.offline }
 		let query = CKQuery(recordType: type, predicate: predicate)
 		query.sortDescriptors = sortedBy
-		do {
-			var allResults: [CKRecord] = []
-			var cursor: CKQueryOperation.Cursor?
-			
-			while true {
-				let results: (matchResults: [(CKRecord.ID, Result<CKRecord, Error>)], queryCursor: CKQueryOperation.Cursor?)
-				
-				if let cursor {
-					results = try await self.records(continuingMatchFrom: cursor)
-				} else {
-					results = try await self.records(matching: query, inZoneWith: inZone, desiredKeys: keys, resultsLimit: limit)
-				}
-				
-				allResults += results.matchResults.compactMap { result in
-					switch result.1 {
-					case .success(let record): return record
-					case .failure: return nil
-					}
-				}
-				
-				guard let next = results.queryCursor, (limit == 0 || allResults.count < limit) else { break }
-				cursor = next
+
+		var allResults: [CKRecord] = []
+		var cursor: CKQueryOperation.Cursor?
+
+		while true {
+			let results: (matchResults: [(CKRecord.ID, Result<CKRecord, Error>)], queryCursor: CKQueryOperation.Cursor?)
+
+			if let cursor {
+				results = try await self.records(continuingMatchFrom: cursor)
+			} else {
+				results = try await self.records(matching: query, inZoneWith: inZone, desiredKeys: keys, resultsLimit: limit)
 			}
-			return allResults
-		} catch {
-			print("Failed to fetch \(type): \(error)")
+
+			allResults += results.matchResults.compactMap { result in
+				switch result.1 {
+				case .success(let record): return record
+				case .failure: return nil
+				}
+			}
+
+			guard let next = results.queryCursor, (limit == 0 || allResults.count < limit) else { break }
+			cursor = next
 		}
-		
-		return []
+		return allResults
 	}
 }

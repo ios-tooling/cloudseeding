@@ -78,13 +78,13 @@ actor CloudComms {
 		case .limitExceeded: throw CloudError.tryLater
 		case .userDeletedZone: throw CloudError.recordProblem(error)
 		case .tooManyParticipants: throw CloudError.unableToSave(error)
-		case .alreadyShared: break
+		case .alreadyShared: throw CloudError.recordProblem(error)
 		case .referenceViolation: throw CloudError.recordProblem(error)
 		case .managedAccountRestricted: throw CloudError.unableToSave(error)
 		case .participantMayNeedVerification: throw CloudError.recordProblem(error)
 		case .serverResponseLost: throw CloudError.tryLater
 		case .assetNotAvailable: throw CloudError.unableToSave(error)
-		case .participantAlreadyInvited: break
+		case .participantAlreadyInvited: throw CloudError.recordProblem(error)
 		@unknown default: throw error
 		}
 	}

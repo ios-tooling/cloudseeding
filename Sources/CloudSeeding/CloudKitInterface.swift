@@ -47,9 +47,9 @@ import Combine
 			case .available:
 				status = .signedIn
 			case .restricted:
-				status = .signedIn
+				status = .notAvailable
 			case .noAccount:
-				status = .available
+				status = .notAvailable
 			case .temporarilyUnavailable:
 				status = .notAvailable
 			@unknown default:
