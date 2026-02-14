@@ -58,7 +58,10 @@ extension CKRecordBased {
 		
 		set {
 			if let newValue {
-				if let old = rawLastKnownRecord?.modificationDate, let new = newValue.modificationDate, old > new { return }
+				if let old = rawLastKnownRecord?.modificationDate, let new = newValue.modificationDate, old > new {
+					logger.debug("lastKnownRecord setter skipped: cached record (\(old)) is newer than incoming (\(new))")
+					return
+				}
 				let archiver = NSKeyedArchiver(requiringSecureCoding: true)
 				newValue.encode(with: archiver)
 				self.cachedRecordData = archiver.encodedData

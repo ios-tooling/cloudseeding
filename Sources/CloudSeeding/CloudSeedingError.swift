@@ -10,7 +10,7 @@ import os
 
 let logger = Logger(subsystem: "CloudSeeding", category: "sync")
 
-public enum CloudSeedingError: Error { case offline, notAvailable, recordNotFound }
+public enum CloudSeedingError: Error { case offline, notAvailable, notConfigured, recordNotFound }
 
 public struct MultipleError: Error {
 	public var errors: [any Error]

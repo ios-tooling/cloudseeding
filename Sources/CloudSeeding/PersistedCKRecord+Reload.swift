@@ -13,9 +13,11 @@ public enum PersistedCKRecordRefreshError: Error { case recordNotInserted, recor
 
 public extension PersistedCKRecord {
 	
-	func reloadFromCloud(overwriteLocal: Bool = false) async throws {
+	func reloadFromCloud(from database: CKDatabase? = nil, overwriteLocal: Bool = false) async throws {
 		guard let modelContext else { throw PersistedCKRecordRefreshError.recordNotInserted }
-		guard let cloudRecord = try await CloudKitInterface.instance.container.privateCloudDatabase.fetchRecords(withIDs: [ckRecordID]).first else {
+		guard let container = await CloudKitInterface.instance.container else { throw CloudSeedingError.notConfigured }
+		let db = database ?? container.privateCloudDatabase
+		guard let cloudRecord = try await db.fetchRecords(withIDs: [ckRecordID]).first else {
 			if cachedRecordData == nil {
 				logger.warning("Cannot reload \(Self.self): record was never saved to cloud")
 				return

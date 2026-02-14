@@ -22,7 +22,7 @@ import Combine
 
 	var notificationTask: Task<Void, Never>?
 	var containerID: String?
-	public var container: CKContainer!
+	public private(set) var container: CKContainer?
 
 	private init() { }
 
@@ -41,8 +41,12 @@ import Combine
 
 		Task { await checkAccountStatus() }
 	}
-	
+
 	public func checkAccountStatus() async {
+		guard let container else {
+			logger.warning("checkAccountStatus() called before setup()")
+			return
+		}
 		do {
 			let accountStatus = try await container.accountStatus()
 			
