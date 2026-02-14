@@ -9,7 +9,7 @@ import CloudKit
 import Suite
 import SwiftData
 
-enum PersistedCKRecordRefreshError: Error { case recordNotInserted, recordNotFound, loadRecordFailed }
+public enum PersistedCKRecordRefreshError: Error { case recordNotInserted, recordNotFound, loadRecordFailed }
 
 public extension PersistedCKRecord {
 	
@@ -17,7 +17,7 @@ public extension PersistedCKRecord {
 		guard let modelContext else { throw PersistedCKRecordRefreshError.recordNotInserted }
 		guard let cloudRecord = try await CloudKitInterface.instance.container.privateCloudDatabase.fetchRecords(withIDs: [ckRecordID]).first else {
 			if cachedRecordData == nil {
-				print("Never saved, cannot reload")
+				logger.warning("Cannot reload \(Self.self): record was never saved to cloud")
 				return
 			}
 			throw PersistedCKRecordRefreshError.recordNotFound

@@ -67,7 +67,7 @@ extension String {
 				}
 			}
 		} catch {
-			 print("Regex error: \(error)")
+			logger.error("Regex error extracting zoneID: \(error)")
 		}
 		return nil
 	}

@@ -7,6 +7,7 @@
 
 import Foundation
 import CloudKit
+import os
 
 class SaveRecordOperation: CKModifyRecordsOperation, @unchecked Sendable {
 	convenience init(record: CKRecord) {
@@ -16,11 +17,15 @@ class SaveRecordOperation: CKModifyRecordsOperation, @unchecked Sendable {
 	func save(to database: CKDatabase) async throws -> CKRecord {
 
 		try await withCheckedThrowingContinuation { continuation in
-			var hasResumed = false
+			let hasResumed = OSAllocatedUnfairLock(initialState: false)
 
 			self.perRecordSaveBlock = { recordID, result in
-				guard !hasResumed else { return }
-				hasResumed = true
+				let alreadyResumed = hasResumed.withLock { value -> Bool in
+					if value { return true }
+					value = true
+					return false
+				}
+				guard !alreadyResumed else { return }
 				switch result {
 				case .success(let newRecord):
 					continuation.resume(returning: newRecord)
@@ -31,8 +36,12 @@ class SaveRecordOperation: CKModifyRecordsOperation, @unchecked Sendable {
 			}
 
 			self.modifyRecordsResultBlock = { result in
-				guard !hasResumed else { return }
-				hasResumed = true
+				let alreadyResumed = hasResumed.withLock { value -> Bool in
+					if value { return true }
+					value = true
+					return false
+				}
+				guard !alreadyResumed else { return }
 				switch result {
 				case .success:
 					// Should not reach here without perRecordSaveBlock being called,

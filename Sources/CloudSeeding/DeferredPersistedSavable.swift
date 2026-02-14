@@ -18,7 +18,7 @@ public extension DeferredPersistedSavable {
 	func save(record: CKRecord, to database: CKDatabase) async {
 		let id = persistentModelID
 		guard let container = modelContext?.container else {
-			print("Trying to save a non-inserted record, failing.")
+			logger.warning("Trying to save a non-inserted \(Self.self) record, failing.")
 			return
 		}
 		do {
@@ -26,7 +26,7 @@ public extension DeferredPersistedSavable {
 		} catch {
 			let ctx = ModelContext(container)
 			guard let model = ctx.model(for: id) as? any DeferredPersistedSavable else {
-				print("Trying to save a mismatched object.")
+				logger.error("Failed to resolve \(Self.self) for deferred save: model ID mismatch")
 				return
 			}
 			model.pendingCloudRecord = record
@@ -69,7 +69,7 @@ public extension DeferredPersistedSavable {
 		do {
 			try modelContext?.save()
 		} catch {
-			print("Failed to saved DeferredPersistedSavable \(Self.self): \(error)")
+			logger.error("Failed to save DeferredPersistedSavable \(Self.self): \(error)")
 		}
 	}
 	

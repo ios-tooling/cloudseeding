@@ -20,19 +20,25 @@ import Combine
 	nonisolated static let currentUserIDValue = CurrentValueSubject<String?, Never>(nil)
 	nonisolated static let currentUserNameValue = CurrentValueSubject<String?, Never>(nil)
 
-	var tokens: [NSObjectProtocol] = []
+	var notificationTask: Task<Void, Never>?
 	var containerID: String?
 	public var container: CKContainer!
-	
+
 	private init() { }
-	
+
 	public func setup(containerID: String?) {
-		tokens.append(NotificationCenter.default.addObserver(forName: Notification.Name.CKAccountChanged, object: nil, queue: .main) { note in
-			Task { await self.checkAccountStatus() }
-		})
-		
+		notificationTask?.cancel()
+
 		self.containerID = containerID
 		container = containerID == nil ? CKContainer.default() : CKContainer(identifier: containerID!)
+
+		notificationTask = Task { [weak self] in
+			for await _ in NotificationCenter.default.notifications(named: .CKAccountChanged) {
+				guard !Task.isCancelled else { return }
+				await self?.checkAccountStatus()
+			}
+		}
+
 		Task { await checkAccountStatus() }
 	}
 	
@@ -66,7 +72,7 @@ import Combine
 				}
 			}
 		} catch {
-			print("Failed to check CloudKit account status: \(error)")
+			logger.error("Failed to check CloudKit account status: \(error)")
 		}
 	}
 }

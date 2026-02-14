@@ -55,15 +55,15 @@ public extension PersistedCKRecord {
 	
 	func reportedSave() {
 		guard let modelContext else {
-			print("Trying to save a record without a model context")
+			logger.warning("Trying to save a \(Self.self) record without a model context")
 			return
 		}
-		
+
 		do {
 			modelContext.presave()
 			try modelContext.save()
 		} catch {
-			print("Failed to save record: \(type(of: self)): \(error.localizedDescription)")
+			logger.error("Failed to save record \(Self.self): \(error)")
 		}
 	}
 	
