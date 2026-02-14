@@ -28,6 +28,9 @@ let package = Package(
 					.product(name: "Suite", package: "Suite"),
 			 ]
         ),
-
+		  .testTarget(
+				name: "CloudSeedingTests",
+				dependencies: ["CloudSeeding"]
+		  ),
     ]
 )
