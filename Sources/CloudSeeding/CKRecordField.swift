@@ -72,6 +72,10 @@ extension CKRecordField where DataType: Codable {
 	}
 }
 
+extension CKRecordField where DataType == CKAsset {
+	public static func asset(_ name: String) -> Self { .init(name: name, dataType: CKAsset.self) }
+}
+
 extension CKAsset {
 	public static let ckRecordAttachmentsDirectory = URL.document(named: "cloudkit-assets")
 	
