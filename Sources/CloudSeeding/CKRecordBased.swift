@@ -17,12 +17,12 @@ public protocol CKRecordBased: AnyObject {
 	var ckRecordName: String { get }
 	var ckRecordID: CKRecord.ID { get }
 	static var ckRecordType: CKRecord.RecordType { get }
-	var ckRecordZoneID: CKRecordZone.ID { get }
+	static var ckRecordZoneID: CKRecordZone.ID { get }
 }
 
 
 extension CKRecordBased {
-	public var ckRecordID: CKRecord.ID { CKRecord.ID(recordName: ckRecordName, zoneID: ckRecordZoneID) }
+	public var ckRecordID: CKRecord.ID { CKRecord.ID(recordName: ckRecordName, zoneID: Self.ckRecordZoneID) }
 
 	public func updateCloudRecord(_ record: CKRecord) {
 		populateCloudRecord(record)

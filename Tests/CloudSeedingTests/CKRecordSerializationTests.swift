@@ -18,7 +18,7 @@ final class MockCKRecordBased: CKRecordBased {
 
 	var ckRecordName: String { testRecordName }
 	static var ckRecordType: CKRecord.RecordType { "MockType" }
-	var ckRecordZoneID: CKRecordZone.ID {
+	static var ckRecordZoneID: CKRecordZone.ID {
 		CKRecordZone.ID(zoneName: "TestZone", ownerName: CKCurrentUserDefaultName)
 	}
 }
@@ -33,7 +33,7 @@ final class MockCKRecordBased: CKRecordBased {
 
 @Test func lastKnownRecord_setAndGet_roundtrip() {
 	let mock = MockCKRecordBased()
-	let record = CKRecord(recordType: "MockType", recordID: CKRecord.ID(recordName: "test-record", zoneID: mock.ckRecordZoneID))
+	let record = CKRecord(recordType: "MockType", recordID: CKRecord.ID(recordName: "test-record", zoneID: type(of: mock).ckRecordZoneID))
 	record["title"] = "Hello" as CKRecordValue
 	record["count"] = 42 as CKRecordValue
 
@@ -49,7 +49,7 @@ final class MockCKRecordBased: CKRecordBased {
 
 @Test func lastKnownRecord_setNil_clearsData() {
 	let mock = MockCKRecordBased()
-	let record = CKRecord(recordType: "MockType", recordID: CKRecord.ID(recordName: "test-record", zoneID: mock.ckRecordZoneID))
+	let record = CKRecord(recordType: "MockType", recordID: CKRecord.ID(recordName: "test-record", zoneID: type(of: mock).ckRecordZoneID))
 	mock.lastKnownRecord = record
 	#expect(mock.cachedRecordData != nil)
 
@@ -60,7 +60,7 @@ final class MockCKRecordBased: CKRecordBased {
 
 @Test func lastKnownRecord_preservesCustomFields() {
 	let mock = MockCKRecordBased()
-	let record = CKRecord(recordType: "MockType", recordID: CKRecord.ID(recordName: "test-record", zoneID: mock.ckRecordZoneID))
+	let record = CKRecord(recordType: "MockType", recordID: CKRecord.ID(recordName: "test-record", zoneID: type(of: mock).ckRecordZoneID))
 	let date = Date(timeIntervalSince1970: 1000000)
 	record["name"] = "Test" as CKRecordValue
 	record["number"] = 3.14 as CKRecordValue
