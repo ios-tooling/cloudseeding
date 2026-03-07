@@ -93,6 +93,12 @@ extension CKAsset {
 }
 
 extension CKRecord {
+	public subscript(field: CKRecordField<URL>) -> URL? {
+		if let url = self[field.name] as? URL { return url }
+		if let string = self[field.name] as? String { return URL(string: string) }
+		return nil
+	}
+	
 	public subscript(field: CKRecordField<URL>, type: UTType) -> URL? {
 		get {
 			if let url = self[field.name] as? URL { return url }
