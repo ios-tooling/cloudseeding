@@ -20,6 +20,12 @@ public protocol PersistedCKRecord: CKRecordBased & PersistentModel, PresavablePe
 	func load(fromCloud record: CKRecord, context: ModelContext) -> Bool
 	func presave()
 	func removeFromContext()
+
+	/// Predicates are being 'optimized' into failure by Release builds.
+	/// We need to provide concrete FetchDescriptors for each record type.
+	static func fetchDescriptor(forSyncEngineID id: String) -> FetchDescriptor<Self>
+	static func modifiedRecordsFetchDescriptor() -> FetchDescriptor<Self>
+	static func syncFlagResetFetchDescriptor() -> FetchDescriptor<Self>
 }
 
 public extension PersistedCKRecord {
