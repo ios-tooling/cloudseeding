@@ -26,6 +26,14 @@ public protocol PersistedCKRecord: CKRecordBased & PersistentModel, PresavablePe
 	static func fetchDescriptor(forSyncEngineID id: String) -> FetchDescriptor<Self>
 	static func modifiedRecordsFetchDescriptor() -> FetchDescriptor<Self>
 	static func syncFlagResetFetchDescriptor() -> FetchDescriptor<Self>
+
+	/// Fetches an existing record by sync engine ID using a concrete predicate.
+	/// These can be called through an existential type without generic bridging issues.
+	static func fetchExisting(id: String, in context: ModelContext) -> (any PersistedCKRecord)?
+
+	/// Fetches an existing record or creates a new one from a CKRecord.
+	/// Called through existential types to avoid generic bridging issues in release builds.
+	@discardableResult static func fetchOrCreateFromCloud(record: CKRecord, in context: ModelContext) -> (any PersistedCKRecord)?
 }
 
 public extension PersistedCKRecord {
@@ -75,6 +83,39 @@ public extension PersistedCKRecord {
 	
 	func removeFromContext() {
 		modelContext?.delete(self)
+	}
+
+	static func fetchExisting(id: String, in context: ModelContext) -> (any PersistedCKRecord)? {
+		try? context.fetch(fetchDescriptor(forSyncEngineID: id)).first
+	}
+
+	@discardableResult static func fetchOrCreateFromCloud(record: CKRecord, in context: ModelContext) -> (any PersistedCKRecord)? {
+		if let existing = fetchExisting(id: record.recordID.recordName, in: context) {
+			return existing
+		}
+
+		// Create the object and insert it into the context BEFORE calling
+		// load(fromCloud:), so that relationship assignments in load()
+		// (e.g. page.thumbnailAsset = self) don't involve an unmanaged object,
+		// which can cause duplicate registration errors in SwiftData.
+		let new = Self()
+		new.changeRecordedAt = nil
+		new.syncEngineID = record.recordID.recordName
+		if let mod = record[.modifiedAt] {
+			new.modifiedAt = mod
+		} else {
+			new.modifiedAt = record.modificationDate ?? .now
+		}
+		new.lastKnownRecord = record
+		context.insert(new)
+
+		if new.load(fromCloud: record, context: context) {
+			new.lastKnownRecord = record
+			return new
+		} else {
+			context.delete(new)
+			return nil
+		}
 	}
 }
 
