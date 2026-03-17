@@ -56,15 +56,6 @@ public extension PersistedCKRecord {
 		return .localNewer
 	}
 
-	func clearModifiedAt() {
-		changeRecordedAt = nil
-	}
-	
-	func setModifiedAt() {
-		changeRecordedAt = .now
-		modifiedAt = .now
-	}
-	
 	func presave() { }
 	
 	func reportedSave() {
