@@ -63,25 +63,51 @@ public final class CloudKitStats: Sendable {
 	}
 
 	public func recordCount(ofType type: CKRecord.RecordType, matching predicate: NSPredicate = .init(value: true), inZone zone: CKRecordZone.ID? = nil) async throws -> Int {
-		let query = CKQuery(recordType: type, predicate: predicate)
 		var count = 0
 		var cursor: CKQueryOperation.Cursor?
 
-		while true {
-			let results: (matchResults: [(CKRecord.ID, Result<CKRecord, Error>)], queryCursor: CKQueryOperation.Cursor?)
-
-			if let cursor {
-				results = try await database.records(continuingMatchFrom: cursor)
-			} else {
-				results = try await database.records(matching: query, inZoneWith: zone, desiredKeys: [], resultsLimit: CKQueryOperation.maximumResults)
-			}
-
-			count += results.matchResults.count
-			print("Fetched \(results.matchResults.count) (total: \(count) \(type) records")
-			guard let next = results.queryCursor else { break }
-			cursor = next
-		}
+		repeat {
+			let (batchCount, nextCursor) = try await fetchBatch(
+				query: cursor == nil ? CKQuery(recordType: type, predicate: predicate) : nil,
+				cursor: cursor,
+				zone: zone
+			)
+			count += batchCount
+			cursor = nextCursor
+		} while cursor != nil
 
 		return count
+	}
+
+	private func fetchBatch(query: CKQuery?, cursor: CKQueryOperation.Cursor?, zone: CKRecordZone.ID?) async throws -> (Int, CKQueryOperation.Cursor?) {
+		try await withCheckedThrowingContinuation { continuation in
+			let operation: CKQueryOperation
+			if let cursor {
+				operation = CKQueryOperation(cursor: cursor)
+			} else if let query {
+				operation = CKQueryOperation(query: query)
+				operation.zoneID = zone
+			} else {
+				continuation.resume(returning: (0, nil))
+				return
+			}
+
+			operation.desiredKeys = []
+			operation.resultsLimit = CKQueryOperation.maximumResults
+
+			var batchCount = 0
+			operation.recordMatchedBlock = { _, result in
+				if case .success = result { batchCount += 1 }
+			}
+			
+			operation.queryResultBlock = { result in
+				switch result {
+				case .success(let nextCursor): continuation.resume(returning: (batchCount, nextCursor))
+				case .failure(let error): continuation.resume(throwing: error)
+				}
+			}
+
+			database.add(operation)
+		}
 	}
 }
