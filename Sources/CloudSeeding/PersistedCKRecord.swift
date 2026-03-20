@@ -20,6 +20,7 @@ public protocol PersistedCKRecord: CKRecordBased & PersistentModel, PresavablePe
 	func load(fromCloud record: CKRecord, context: ModelContext) -> Bool
 	func presave()
 	func removeFromContext()
+	var isReadyToUpload: Bool { get }
 
 	/// Predicates are being 'optimized' into failure by Release builds.
 	/// We need to provide concrete FetchDescriptors for each record type.
@@ -57,6 +58,7 @@ public extension PersistedCKRecord {
 	}
 
 	func presave() { }
+	var isReadyToUpload: Bool { true }
 	
 	func reportedSave() {
 		guard let modelContext else {
