@@ -131,7 +131,7 @@ public extension PersistedCKRecord {
 		}
 	}
 	
-	var syncedAssetInfo: SyncedAssetInfo {
+	var syncedAssetInfo: SyncedAssetInfo? {
 		.init(name: ckRecordName, updatedAt: modifiedAt)
 	}
 	
