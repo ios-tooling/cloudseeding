@@ -12,6 +12,8 @@ import SwiftData
 public protocol PersistedCKRecord: CKRecordBased & PersistentModel, PresavablePersistentModel {
 	var modifiedAt: Date { get set }
 	var changeRecordedAt: Date? { get set }
+	var uploadedAt: Date? { get set }
+	var downloadedAt: Date? { get set }
 	var syncEngineID: String { get set }
 	init()
 	func resolveConflict(with cloudRecord: CKRecord, newer: NewerRecord, context: ModelContext)
@@ -61,6 +63,7 @@ public extension PersistedCKRecord {
 		}
 		lastKnownRecord = record
 		if !load(fromCloud: record, context: context) { return nil }
+		downloadedAt = .now
 	}
 
 	func newerRecord(than cloudRecord: CKRecord) -> NewerRecord {
@@ -117,6 +120,7 @@ public extension PersistedCKRecord {
 		context.insert(new)
 
 		if new.load(fromCloud: record, context: context) {
+			new.downloadedAt = .now
 			new.lastKnownRecord = record
 			return new
 		} else {

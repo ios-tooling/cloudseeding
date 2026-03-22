@@ -32,6 +32,7 @@ public extension PersistedCKRecord {
 		if !load(fromCloud: cloudRecord, context: modelContext) {
 			throw PersistedCKRecordRefreshError.loadRecordFailed
 		}
+		downloadedAt = .now
 		lastKnownRecord = cloudRecord
 	}
 }

@@ -37,8 +37,8 @@ public extension CKDatabase {
 		}
 	}
 	
-	func fetchRecords(withIDs ids: [CKRecord.ID]) async throws -> [CKRecord] {
-		let all = try await records(for: ids)
+	func fetchRecords(withIDs ids: [CKRecord.ID?]) async throws -> [CKRecord] {
+		let all = try await records(for: ids.compactMap { $0 })
 		return all.values.compactMap { value in
 			switch value {
 			case .success(let record): record

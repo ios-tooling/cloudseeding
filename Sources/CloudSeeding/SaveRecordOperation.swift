@@ -14,6 +14,10 @@ class SaveRecordOperation: CKModifyRecordsOperation, @unchecked Sendable {
 		self.init(recordsToSave: [record])
 	}
 
+	convenience init(records: [CKRecord]) {
+		self.init(recordsToSave: records)
+	}
+
 	func save(to database: CKDatabase) async throws -> CKRecord {
 
 		try await withCheckedThrowingContinuation { continuation in
