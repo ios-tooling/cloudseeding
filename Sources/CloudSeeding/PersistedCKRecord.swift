@@ -9,8 +9,6 @@ import CloudKit
 import Suite
 import SwiftData
 
-public enum NewerRecord: String { case localNewer, serverNewer, unknownNewer }
-
 public protocol PersistedCKRecord: CKRecordBased & PersistentModel, PresavablePersistentModel {
 	var modifiedAt: Date { get set }
 	var changeRecordedAt: Date? { get set }
@@ -21,6 +19,8 @@ public protocol PersistedCKRecord: CKRecordBased & PersistentModel, PresavablePe
 	func presave()
 	func removeFromContext()
 	var isReadyToUpload: Bool { get }
+	var cloudAssets: [SyncedAssetInfo] { get }			// this should contain an array of assets as reported by the CKRecord (aka The Truth)
+	var localAssets: [SyncedAssetInfo] { get }			// this is what we currently have locally
 
 	/// Predicates are being 'optimized' into failure by Release builds.
 	/// We need to provide concrete FetchDescriptors for each record type.
@@ -35,6 +35,18 @@ public protocol PersistedCKRecord: CKRecordBased & PersistentModel, PresavablePe
 	/// Fetches an existing record or creates a new one from a CKRecord.
 	/// Called through existential types to avoid generic bridging issues in release builds.
 	@discardableResult static func fetchOrCreateFromCloud(record: CKRecord, in context: ModelContext) -> (any PersistedCKRecord)?
+}
+
+public enum NewerRecord: String { case localNewer, serverNewer, unknownNewer }
+
+public struct SyncedAssetInfo: Codable, Sendable, Equatable {
+	public var name: String
+	public var updatedAt: Date?
+	
+	public init(name: String, updatedAt: Date? = nil) {
+		self.name = name
+		self.updatedAt = updatedAt
+	}
 }
 
 public extension PersistedCKRecord {
@@ -59,7 +71,9 @@ public extension PersistedCKRecord {
 
 	func presave() { }
 	var isReadyToUpload: Bool { true }
-	
+	var cloudAssets: [SyncedAssetInfo] { [] }
+	var localAssets: [SyncedAssetInfo] { [] }
+
 	func reportedSave() {
 		guard let modelContext else {
 			logger.warning("Trying to save a \(Self.self) record without a model context")
@@ -109,6 +123,10 @@ public extension PersistedCKRecord {
 			context.delete(new)
 			return nil
 		}
+	}
+	
+	var syncedAssetInfo: SyncedAssetInfo {
+		.init(name: ckRecordName, updatedAt: modifiedAt)
 	}
 }
 
