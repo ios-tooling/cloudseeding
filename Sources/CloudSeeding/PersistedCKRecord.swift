@@ -24,6 +24,8 @@ public protocol PersistedCKRecord: CKRecordBased & PersistentModel, PresavablePe
 	var cloudAssets: [SyncedAssetInfo] { get }			// this should contain an array of assets as reported by the CKRecord (aka The Truth)
 	var localAssets: [SyncedAssetInfo] { get }			// this is what we currently have locally
 
+	func didLoadCloudAsset(assetID: CKRecord.ID)
+	
 	/// Predicates are being 'optimized' into failure by Release builds.
 	/// We need to provide concrete FetchDescriptors for each record type.
 	static func fetchDescriptor(forSyncEngineID id: String) -> FetchDescriptor<Self>
@@ -132,5 +134,7 @@ public extension PersistedCKRecord {
 	var syncedAssetInfo: SyncedAssetInfo {
 		.init(name: ckRecordName, updatedAt: modifiedAt)
 	}
+	
+	func didLoadCloudAsset(assetID: CKRecord.ID) { }
 }
 
