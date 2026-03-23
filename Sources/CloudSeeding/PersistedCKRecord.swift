@@ -136,5 +136,21 @@ public extension PersistedCKRecord {
 	}
 	
 	func didLoadCloudAsset(assetID: CKRecord.ID) { }
+	
+	var locallyUpdatedAssets: [SyncedAssetInfo] {
+		let cloud = cloudAssets
+		return localAssets.compactMap { asset in
+			if let cloudInfo = cloud.first(where: { $0.name == asset.name }) {
+				if let localDate = asset.updatedAt, let cloudDate = cloudInfo.updatedAt {
+					return localDate > cloudDate ? asset : nil
+				}
+				if asset.updatedAt != nil, cloudInfo.updatedAt == nil { return asset }
+				return nil
+			}
+			
+			return asset
+		}
+
+	}
 }
 
