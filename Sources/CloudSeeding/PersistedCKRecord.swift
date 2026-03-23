@@ -21,8 +21,8 @@ public protocol PersistedCKRecord: CKRecordBased & PersistentModel, PresavablePe
 	func presave()
 	func removeFromContext()
 	var isReadyToUpload: Bool { get }
-	var cloudAssets: [SyncedAssetInfo] { get }			// this should contain an array of assets as reported by the CKRecord (aka The Truth)
-	var localAssets: [SyncedAssetInfo] { get }			// this is what we currently have locally
+	var cloudAssets: [SyncedAssetInfo] { get set }			// this should contain an array of assets as reported by the CKRecord (aka The Truth)
+	var localAssets: [SyncedAssetInfo] { get }				// this is what we currently have locally
 
 	func didLoadCloudAsset(assetID: CKRecord.ID)
 	
@@ -76,7 +76,7 @@ public extension PersistedCKRecord {
 
 	func presave() { }
 	var isReadyToUpload: Bool { true }
-	var cloudAssets: [SyncedAssetInfo] { [] }
+	var cloudAssets: [SyncedAssetInfo] { get { [] } set { } }
 	var localAssets: [SyncedAssetInfo] { [] }
 
 	func reportedSave() {
@@ -136,21 +136,5 @@ public extension PersistedCKRecord {
 	}
 	
 	func didLoadCloudAsset(assetID: CKRecord.ID) { }
-	
-	var locallyUpdatedAssets: [SyncedAssetInfo] {
-		let cloud = cloudAssets
-		return localAssets.compactMap { asset in
-			if let cloudInfo = cloud.first(where: { $0.name == asset.name }) {
-				if let localDate = asset.updatedAt, let cloudDate = cloudInfo.updatedAt {
-					return localDate > cloudDate ? asset : nil
-				}
-				if asset.updatedAt != nil, cloudInfo.updatedAt == nil { return asset }
-				return nil
-			}
-			
-			return asset
-		}
-
-	}
 }
 
