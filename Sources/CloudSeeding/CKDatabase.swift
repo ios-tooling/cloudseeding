@@ -37,6 +37,15 @@ public extension CKDatabase {
 		}
 	}
 	
+	func recordExists(withID id: CKRecord.ID) async throws -> Bool {
+		do {
+			_ = try await record(for: id)
+			return true
+		} catch let error as CKError where error.code == .unknownItem {
+			return false
+		}
+	}
+
 	func fetchRecords(withIDs ids: [CKRecord.ID?]) async throws -> [CKRecord] {
 		let all = try await records(for: ids.compactMap { $0 })
 		return all.values.compactMap { value in
