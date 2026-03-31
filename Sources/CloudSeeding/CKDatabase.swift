@@ -38,11 +38,26 @@ public extension CKDatabase {
 	}
 	
 	func recordExists(withID id: CKRecord.ID) async throws -> Bool {
-		do {
-			_ = try await record(for: id)
-			return true
-		} catch let error as CKError where error.code == .unknownItem {
-			return false
+		try await withCheckedThrowingContinuation { continuation in
+			let operation = CKFetchRecordsOperation(recordIDs: [id])
+			operation.desiredKeys = []
+			var recordResult: Result<CKRecord, Error>?
+			operation.perRecordResultBlock = { _, result in
+				recordResult = result
+			}
+			operation.fetchRecordsResultBlock = { _ in
+				switch recordResult {
+				case .success: continuation.resume(returning: true)
+				case .failure(let error):
+					if let ckError = error as? CKError, ckError.code == .unknownItem {
+						continuation.resume(returning: false)
+					} else {
+						continuation.resume(throwing: error)
+					}
+				case .none: continuation.resume(returning: false)
+				}
+			}
+			self.add(operation)
 		}
 	}
 
