@@ -9,6 +9,7 @@ import Foundation
 import CloudKit
 import CoreLocation
 
+@available(iOS 17.0, macOS 14, *)
 public extension CKRecord {
 	var createdByRecordID: String? {
 		let name = self.creatorUserRecordID?.recordName

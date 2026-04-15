@@ -7,6 +7,7 @@
 
 import CloudKit
 
+@available(iOS 17.0, macOS 14, *)
 public final class CloudKitStats: Sendable {
 	public enum DatabaseType: Sendable {
 		case `public`, `private`, shared

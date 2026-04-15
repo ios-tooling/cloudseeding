@@ -7,7 +7,7 @@ let package = Package(
     name: "CloudSeeding",
 	 platforms: [
 				 .macOS(.v14),
-				 .iOS(.v17),
+				 .iOS(.v14),
 				 .watchOS(.v10)
 		  ],
     products: [

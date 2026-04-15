@@ -8,6 +8,7 @@
 import Foundation
 import CloudKit
 
+@available(iOS 17.0, macOS 14, *)
 extension Error {
 	public var errorChain: [Error] {
 		var result: [any Error] = [self]

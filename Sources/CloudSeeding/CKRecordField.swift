@@ -76,6 +76,7 @@ extension CKRecordField where DataType == CKAsset {
 	public static func asset(_ name: String) -> Self { .init(name: name, dataType: CKAsset.self) }
 }
 
+@available(iOS 17.0, macOS 14, *)
 extension CKAsset {
 	public static let ckRecordAttachmentsDirectory = URL.document(named: "cloudkit-assets")
 	
@@ -92,6 +93,7 @@ extension CKAsset {
 	}
 }
 
+@available(iOS 17.0, macOS 14, *)
 extension CKRecord {
 	public subscript(field: CKRecordField<URL>) -> URL? {
 		get {

@@ -12,6 +12,7 @@ public extension Error {
 	var ckError: CKError? { self as? CKError }
 }
 
+@available(iOS 17.0, macOS 14, *)
 public extension CKError {
 	var isNotAuthenticated: Bool { code == .notAuthenticated }
 	var isTemporarilyUnavailable: Bool { code == .accountTemporarilyUnavailable }

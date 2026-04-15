@@ -10,6 +10,7 @@ import CloudKit
 
 public enum CKRecordConflictHandlerResult: Sendable { case ignore, replace(CKRecord) }
 
+@available(iOS 17.0, macOS 14, *)
 public extension CKDatabase {
 	func save(record: CKRecord) async throws -> CKRecord {
 		try await save(record: record) { _, _ in .ignore}

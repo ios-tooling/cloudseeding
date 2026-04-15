@@ -9,6 +9,7 @@ import Foundation
 import CloudKit
 import Combine
 
+@available(iOS 17.0, macOS 14, *)
 @MainActor @Observable public class CloudKitInterface {
 	public static let instance = CloudKitInterface()
 	

@@ -9,6 +9,7 @@ import Foundation
 import CloudKit
 import SwiftData
 
+@available(iOS 17.0, macOS 14, *)
 public protocol CKRecordBased: AnyObject {
 	var cachedRecordData: Data? { get set }
 	
@@ -21,6 +22,7 @@ public protocol CKRecordBased: AnyObject {
 }
 
 
+@available(iOS 17.0, macOS 14, *)
 extension CKRecordBased {
 	public var ckRecordID: CKRecord.ID { CKRecord.ID(recordName: ckRecordName, zoneID: ckRecordZoneID) }
 

@@ -11,6 +11,7 @@ import SwiftData
 
 public enum PersistedCKRecordRefreshError: Error { case recordNotInserted, recordNotFound, loadRecordFailed }
 
+@available(iOS 17.0, macOS 14, *)
 public extension PersistedCKRecord {
 	
 	func reloadFromCloud(from database: CKDatabase? = nil, overwriteLocal: Bool = false) async throws {

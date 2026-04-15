@@ -7,6 +7,7 @@
 
 import Suite
 
+@available(iOS 17.0, macOS 14, *)
 extension View {
 	@ViewBuilder public func showingCloudKitAvailability() -> some View {
 		self
@@ -17,6 +18,7 @@ extension View {
 	}
 }
 
+@available(iOS 17.0, macOS 14, *)
 public struct CloudKitNotAvailableView: View {
 	var cloudKit = CloudKitInterface.instance
 	public init() { }

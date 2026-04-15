@@ -9,11 +9,13 @@ import CloudKit
 import Foundation
 import SwiftData
 
+@available(iOS 17.0, macOS 14, *)
 public protocol DeferredPersistedSavable: PersistentModel {
 	var pendingCloudRecordData: Data? { get set }
 	var pendingCloudRecord: CKRecord? { get set }
 }
 
+@available(iOS 17.0, macOS 14, *)
 public extension DeferredPersistedSavable {
 	func save(record: CKRecord, to database: CKDatabase) async {
 		let id = persistentModelID

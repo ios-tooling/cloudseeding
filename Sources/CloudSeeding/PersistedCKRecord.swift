@@ -9,6 +9,7 @@ import CloudKit
 import Suite
 import SwiftData
 
+@available(iOS 17.0, macOS 14, *)
 public protocol PersistedCKRecord: CKRecordBased & PersistentModel, PresavablePersistentModel {
 	var modifiedAt: Date { get set }
 	var changeRecordedAt: Date? { get set }
@@ -53,6 +54,7 @@ public struct SyncedAssetInfo: Codable, Sendable, Equatable {
 	}
 }
 
+@available(iOS 17.0, macOS 14, *)
 public extension PersistedCKRecord {
 	init?(record: CKRecord, context: ModelContext) {
 		self.init()

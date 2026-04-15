@@ -9,6 +9,7 @@ import CloudKit
 import Suite
 
 
+@available(iOS 17.0, macOS 14, *)
 actor CloudComms {
 	static let instance = CloudComms()
 	

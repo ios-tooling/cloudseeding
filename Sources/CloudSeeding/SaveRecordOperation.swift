@@ -9,6 +9,7 @@ import Foundation
 import CloudKit
 import os
 
+@available(iOS 17.0, macOS 14, *)
 class SaveRecordOperation: CKModifyRecordsOperation, @unchecked Sendable {
 	convenience init(record: CKRecord) {
 		self.init(recordsToSave: [record])
