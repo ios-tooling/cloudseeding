@@ -8,7 +8,9 @@ let package = Package(
 	 platforms: [
 				 .macOS(.v14),
 				 .iOS(.v14),
-				 .watchOS(.v10)
+				 .watchOS(.v10),
+				 .tvOS(.v17),
+				 .visionOS(.v1),
 		  ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
@@ -18,7 +20,7 @@ let package = Package(
         ),
     ],
 	 dependencies: [
-		.package(url: "https://github.com/ios-tooling/Suite", .upToNextMajor(from: "1.3.4")),
+		.package(url: "https://github.com/ios-tooling/Suite", .upToNextMajor(from: "1.3.18")),
 	 ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
