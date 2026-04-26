@@ -9,6 +9,8 @@ import CloudKit
 import Foundation
 import SwiftData
 
+extension CKRecord: @unchecked @retroactive Sendable { }
+
 @available(iOS 17.0, macOS 14, *)
 public protocol DeferredPersistedSavable: PersistentModel {
 	var pendingCloudRecordData: Data? { get set }
@@ -17,7 +19,7 @@ public protocol DeferredPersistedSavable: PersistentModel {
 
 @available(iOS 17.0, macOS 14, *)
 public extension DeferredPersistedSavable {
-	func save(record: CKRecord, to database: CKDatabase) async {
+	nonisolated(nonsending) func save(record: CKRecord, to database: CKDatabase) async {
 		let id = persistentModelID
 		guard let container = modelContext?.container else {
 			logger.warning("Trying to save a non-inserted \(Self.self) record, failing.")
