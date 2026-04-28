@@ -82,7 +82,7 @@ extension CKAsset {
 	
 	func localAssetURL(for type: UTType) -> URL? {
 		guard let fileURL else { return nil }
-		let filename = (try? fileURL.md5) ?? fileURL.lastPathComponent
+		guard let filename = try? fileURL.md5 else { return nil }
 		let full = Self.ckRecordAttachmentsDirectory.appendingPathComponent(filename, conformingTo: type)
 		try? FileManager.default.createDirectory(at: Self.ckRecordAttachmentsDirectory, withIntermediateDirectories: true)
 
@@ -113,18 +113,22 @@ extension CKRecord {
 			return (self[field.name] as? CKAsset)?.localAssetURL(for: type)?.removingHomeDirectory
 		}
 		set {
+			if self[field, type] == newValue { return }
 			guard let url = newValue else {
 				self[field.name] = nil
 				return
 			}
-			
+
 			self[field.name] = CKAsset(fileURL: url.addingHomeDirectory)
 		}
 	}
 	
 	public subscript(field: CKRecordField<[URL]>, type: UTType) -> [URL]? {
 		get { (self[field.name] as? [CKAsset])?.compactMap { $0.localAssetURL(for: type)?.removingHomeDirectory } }
-		set { self[field.name] = newValue?.map { CKAsset(fileURL: $0.addingHomeDirectory) }}
+		set {
+			if self[field, type] == newValue { return }
+			self[field.name] = newValue?.map { CKAsset(fileURL: $0.addingHomeDirectory) }
+		}
 	}
 	
 	public subscript<Result>(field: CKRecordField<Result>) -> Result? {
