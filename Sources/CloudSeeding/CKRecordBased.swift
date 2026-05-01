@@ -28,9 +28,6 @@ extension CKRecordBased {
 
 	public func updateCloudRecord(_ record: CKRecord) {
 		populateCloudRecord(record)
-		if let modifiedAt = (self as? any PersistedCKRecord)?.modifiedAt, record[.modifiedAt] != modifiedAt {
-			record[.modifiedAt] = modifiedAt
-		}
 	}
 	
 	public var ckRecord: CKRecord {
