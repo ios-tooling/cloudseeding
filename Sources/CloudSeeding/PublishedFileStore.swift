@@ -13,6 +13,8 @@
 //    • name  : String  — a display label (optional)
 //    • updatedAt : Date
 //    • size : Int64 — the asset's byte count, so listing needn't fetch assets
+//    • version : String — a caller-set version label, so a client can tell a
+//      newer file has been published (via `info`) without downloading the asset
 //
 
 import Foundation
@@ -27,6 +29,8 @@ public enum PublishedFileStore {
 		/// it needs to persist).
 		public let fileURL: URL
 		public let name: String
+		/// The caller-set version label at publish time, if any.
+		public let version: String?
 	}
 
 	/// One published record's metadata, without downloading its asset. `size` is
@@ -37,6 +41,7 @@ public enum PublishedFileStore {
 		public let name: String
 		public let updatedAt: Date?
 		public let size: Int64?
+		public let version: String?
 	}
 
 	/// Fetches the published file for `key` from the container's public database.
@@ -45,17 +50,19 @@ public enum PublishedFileStore {
 		guard let asset = record["asset"] as? CKAsset, let fileURL = asset.fileURL else {
 			throw PublishedFileError.missingAsset(key)
 		}
-		return DownloadedFile(fileURL: fileURL, name: (record["name"] as? String) ?? key)
+		return DownloadedFile(fileURL: fileURL, name: (record["name"] as? String) ?? key, version: record["version"] as? String)
 	}
 
 	/// Publishes (creates or replaces) the file at `key`. Admin-only: writing to
 	/// the public database needs an iCloud account with create/write permission.
-	public static func publish(key: String, fileURL: URL, name: String, containerID: String) async throws {
+	/// `version` is a caller-set label clients compare to detect a newer file.
+	public static func publish(key: String, fileURL: URL, name: String, version: String? = nil, containerID: String) async throws {
 		let database = publicDatabase(containerID)
 		let record = (try? await fetch(key: key, in: database)) ?? CKRecord(recordType: recordType, recordID: CKRecord.ID(recordName: key))
 		record["asset"] = CKAsset(fileURL: fileURL)
 		record["name"] = name as CKRecordValue
 		record["updatedAt"] = Date() as CKRecordValue
+		if let version { record["version"] = version as CKRecordValue }
 		if let size = try? FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as? Int64 {
 			record["size"] = size as CKRecordValue
 		}
@@ -77,17 +84,44 @@ public enum PublishedFileStore {
 		// database (surfacing as a spurious network error).
 		let query = CKQuery(recordType: recordType, predicate: NSPredicate(value: true))
 		do {
-			let (results, _) = try await database.records(matching: query, desiredKeys: ["name", "updatedAt", "size"])
+			let (results, _) = try await database.records(matching: query, desiredKeys: ["name", "updatedAt", "size", "version"])
 			return results.compactMap { recordID, result -> PublishedItem? in
 				guard let record = try? result.get() else { return nil }
 				return PublishedItem(key: recordID.recordName,
 				                     name: (record["name"] as? String) ?? recordID.recordName,
 				                     updatedAt: record["updatedAt"] as? Date,
-				                     size: record["size"] as? Int64)
+				                     size: record["size"] as? Int64,
+				                     version: record["version"] as? String)
 			}
 			.sorted { ($0.updatedAt ?? .distantPast) > ($1.updatedAt ?? .distantPast) }
 		} catch let error as CKError where error.code == .unknownItem {
 			return []  // record type not created yet — nothing published
+		} catch let error as CKError where error.code == .networkUnavailable || error.code == .networkFailure {
+			throw PublishedFileError.offline
+		} catch {
+			throw PublishedFileError.cloud(error.localizedDescription)
+		}
+	}
+
+	/// One published file's metadata (version, updatedAt, size) without
+	/// downloading its asset — world-readable, cheap enough to poll on open.
+	/// Returns nil when nothing is published under `key`.
+	public static func info(key: String, containerID: String) async throws -> PublishedItem? {
+		let database = publicDatabase(containerID)
+		// Query by recordID with desiredKeys (never "asset") so CloudKit doesn't
+		// fetch the multi-hundred-MB file just to read a version string.
+		let predicate = NSPredicate(format: "recordID == %@", CKRecord.ID(recordName: key))
+		let query = CKQuery(recordType: recordType, predicate: predicate)
+		do {
+			let (results, _) = try await database.records(matching: query, desiredKeys: ["name", "updatedAt", "size", "version"])
+			guard let (recordID, result) = results.first, let record = try? result.get() else { return nil }
+			return PublishedItem(key: recordID.recordName,
+			                     name: (record["name"] as? String) ?? recordID.recordName,
+			                     updatedAt: record["updatedAt"] as? Date,
+			                     size: record["size"] as? Int64,
+			                     version: record["version"] as? String)
+		} catch let error as CKError where error.code == .unknownItem {
+			return nil  // record type not created yet — nothing published
 		} catch let error as CKError where error.code == .networkUnavailable || error.code == .networkFailure {
 			throw PublishedFileError.offline
 		} catch {
