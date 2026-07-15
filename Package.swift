@@ -18,6 +18,10 @@ let package = Package(
             name: "CloudSeeding",
             targets: ["CloudSeeding"]
         ),
+		  .executable(
+				name: "cloudseeding",
+				targets: ["CloudSeedingTool"]
+		  ),
     ],
 	 dependencies: [
 		.package(url: "https://github.com/ios-tooling/Suite", .upToNextMajor(from: "1.3.18")),
@@ -30,9 +34,17 @@ let package = Package(
 					.product(name: "Suite", package: "Suite"),
 			 ]
         ),
+		  .target(
+				name: "CloudSeedingCLISupport",
+				dependencies: []
+		  ),
+		  .executableTarget(
+				name: "CloudSeedingTool",
+				dependencies: ["CloudSeedingCLISupport"]
+		  ),
 		  .testTarget(
 				name: "CloudSeedingTests",
-				dependencies: ["CloudSeeding"]
+				dependencies: ["CloudSeeding", "CloudSeedingCLISupport"]
 		  ),
     ]
 )
