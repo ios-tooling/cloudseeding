@@ -19,21 +19,30 @@ public protocol DeferredPersistedSavable: PersistentModel {
 
 @available(iOS 17.0, macOS 14, *)
 public extension DeferredPersistedSavable {
-	nonisolated(nonsending) func save(record: CKRecord, to database: CKDatabase) async {
+	/// Saves to CloudKit, parking the record for a later retry on failure. The
+	/// failure (if any) is returned so callers can surface it instead of
+	/// treating a deferred save as a completed one.
+	@discardableResult
+	nonisolated(nonsending) func save(record: CKRecord, to database: CKDatabase) async -> Error? {
 		let id = persistentModelID
 		guard let container = modelContext?.container else {
 			logger.warning("Trying to save a non-inserted \(Self.self) record, failing.")
-			return
+			return CloudSeedingError.notAvailable
 		}
 		do {
 			try await CloudComms.instance.save(record: record, to: database)
+			// The record reached CloudKit; any copy parked by an earlier failure is obsolete.
+			let ctx = ModelContext(container)
+			if let model = ctx.model(for: id) as? any DeferredPersistedSavable { model.pendingCloudRecord = nil }
+			return nil
 		} catch {
 			let ctx = ModelContext(container)
 			guard let model = ctx.model(for: id) as? any DeferredPersistedSavable else {
 				logger.error("Failed to resolve \(Self.self) for deferred save: model ID mismatch")
-				return
+				return error
 			}
 			model.pendingCloudRecord = record
+			return error
 		}
 	}
 	

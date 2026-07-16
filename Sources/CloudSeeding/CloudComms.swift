@@ -34,10 +34,22 @@ actor CloudComms {
 			if cooldownEndsAt.isInFuture { throw CloudError.coolingDown }
 			self.cooldownEndsAt = nil
 		}
-		
+
 		do {
 			try await database.save(record)
 		} catch let error as CKError {
+			// A record we didn't fetch first may already exist server-side; re-apply
+			// our fields to the server's copy so saves behave as upserts.
+			if error.code == .serverRecordChanged,
+			   let serverRecord = error.userInfo[CKRecordChangedErrorServerRecordKey] as? CKRecord {
+				for key in record.allKeys() { serverRecord[key] = record[key] }
+				do {
+					try await database.save(serverRecord)
+				} catch let retryError as CKError {
+					try handleCKError(retryError)
+				}
+				return
+			}
 			try handleCKError(error)
 		}
 	}
