@@ -9,8 +9,6 @@ import CloudKit
 import Foundation
 import SwiftData
 
-extension CKRecord: @unchecked @retroactive Sendable { }
-
 @available(iOS 17.0, macOS 14, *)
 public protocol DeferredPersistedSavable: PersistentModel {
 	var pendingCloudRecordData: Data? { get set }
