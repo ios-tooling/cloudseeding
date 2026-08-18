@@ -1,13 +1,13 @@
 {
-  "originHash" : "cc36d3d41737b84462708397b446ed4c0d36c6f17e1e06797b7a6d25d5ac17a6",
+  "originHash" : "d7fd413c59394f1c1ad98282cab165bb2003297c61e50c404de10634034cb4b0",
   "pins" : [
     {
       "identity" : "suite",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ios-tooling/Suite",
       "state" : {
-        "revision" : "4ed1631b1ec6a5c23c31cac2e6446e4aff6a9a74",
-        "version" : "1.3.18"
+        "revision" : "4d0669feeb84eb42e0314aa9f85a049e5b77f60b",
+        "version" : "1.4.17"
       }
     },
     {

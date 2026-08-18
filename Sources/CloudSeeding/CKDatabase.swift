@@ -8,7 +8,33 @@
 import Suite
 import CloudKit
 
+@available(iOS 17.0, macOS 14, *)
 public enum CKRecordConflictHandlerResult: Sendable { case ignore, replace(CKRecord) }
+
+/// CloudKit lets anyone read the public database, signed in or not; only the
+/// private and shared scopes need an account. Gating public reads on account
+/// status makes a signed-out user look like an empty catalog.
+///
+/// Split out from `requireAccountUnlessPublic()` so the rule itself is testable:
+/// constructing a real `CKDatabase` needs container entitlements a test binary
+/// can't carry.
+@available(iOS 17.0, macOS 14, *)
+enum CloudSeedingAccountRequirement {
+	static func requiresAccount(scope: CKDatabase.Scope, status: CloudKitInterface.Status) -> Bool {
+		guard scope != .public else { return false }
+		return status == .notAvailable
+	}
+}
+
+@available(iOS 17.0, macOS 14, *)
+extension CKDatabase {
+	func requireAccountUnlessPublic() async throws {
+		let status = await CloudKitInterface.instance.status
+		if CloudSeedingAccountRequirement.requiresAccount(scope: databaseScope, status: status) {
+			throw CloudSeedingError.notAvailable
+		}
+	}
+}
 
 @available(iOS 17.0, macOS 14, *)
 public extension CKDatabase {
@@ -73,7 +99,7 @@ public extension CKDatabase {
 	}
 	
 	func fetchRecord(ofType type: String, matching predicate: NSPredicate, inZone: CKRecordZone.ID? = nil) async throws -> CKRecord {
-		if await CloudKitInterface.instance.status == .notAvailable { throw CloudSeedingError.notAvailable }
+		try await requireAccountUnlessPublic()
 		let query = CKQuery(recordType: type, predicate: predicate)
 		let results = try await self.records(matching: query, inZoneWith: inZone, desiredKeys: nil, resultsLimit: 1).matchResults
 		
@@ -86,7 +112,7 @@ public extension CKDatabase {
 	}
 	
 	func fetchRecords(ofType type: CKRecord.RecordType, matching predicate: NSPredicate = .init(value: true), sortedBy: [NSSortDescriptor]? = nil, inZone: CKRecordZone.ID? = nil, keys: [CKRecord.FieldKey]? = nil, limit: Int = CKQueryOperation.maximumResults) async throws -> [CKRecord] {
-		if await CloudKitInterface.instance.status == .notAvailable { throw CloudSeedingError.notAvailable }
+		try await requireAccountUnlessPublic()
 		if await Reachability.instance.isOffline { throw CloudSeedingError.offline }
 		let query = CKQuery(recordType: type, predicate: predicate)
 		query.sortDescriptors = sortedBy

@@ -36,7 +36,7 @@ actor CloudComms {
 		}
 
 		do {
-			try await database.save(record)
+			_ = try await database.save(record)
 		} catch let error as CKError {
 			// A record we didn't fetch first may already exist server-side; re-apply
 			// our fields to the server's copy so saves behave as upserts.
@@ -44,7 +44,7 @@ actor CloudComms {
 			   let serverRecord = error.userInfo[CKRecordChangedErrorServerRecordKey] as? CKRecord {
 				for key in record.allKeys() { serverRecord[key] = record[key] }
 				do {
-					try await database.save(serverRecord)
+					_ = try await database.save(serverRecord)
 				} catch let retryError as CKError {
 					try handleCKError(retryError)
 				}
